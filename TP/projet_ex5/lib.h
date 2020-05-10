@@ -1,0 +1,1 @@
+int bonjour(void);
