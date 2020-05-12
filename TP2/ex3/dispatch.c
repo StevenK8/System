@@ -13,8 +13,6 @@ void addition(int *pipe){
     char* b;
     char str[10];
 
-    printf("Addition");
-
     while(1){
         //lit l'entrée standard en boucle
         read(pipe[0],a,1);
@@ -22,21 +20,46 @@ void addition(int *pipe){
         int sum = a[0]+b[0];
         sprintf(str, "%d", sum);
         //écrit sur la sortie standard
-        write(STDOUT_FILENO, str, 1);
+        printf("<<%d>>\n",sum);
+        // write(STDOUT_FILENO, str, 1);
     }
 }
 
-// void multiplication(){
-//     //lit l'entrée standard en boucle
-//     int mul = a*b;
-//     //écrit sur la sortie standard
-// }
+void multiplication(int *pipe){
+    close(pipe[1]);
+    char* a;
+    char* b;
+    char str[10];
 
-// void soustraction(){
-//     //lit l'entrée standard en boucle
-//     int sub = a-b;
-//     //écrit sur la sortie standard
-// }
+    while(1){
+        //lit l'entrée standard en boucle
+        read(pipe[0],a,10);
+        read(pipe[0],b,10);
+        printf("%s * %s = ",a,b);
+        int mul = a[0]*b[0];
+        sprintf(str, "%d", mul);
+        //écrit sur la sortie standard
+        printf("%d\n>\n",mul);
+    }
+}
+
+void soustraction(int *pipe){
+    close(pipe[1]);
+    char* a;
+    char* b;
+    char str[10];
+
+    while(1){
+        //lit l'entrée standard en boucle
+        read(pipe[0],a,10);
+        read(pipe[0],b,10);
+        printf("%s - %s = ",a,b);
+        int sub = a[0]-b[0];
+        sprintf(str, "%d", sub);
+        //écrit sur la sortie standard
+        printf("%d\n>\n",sub);
+    }
+}
 
 int main(void){
     pid_t pid[3];
@@ -48,44 +71,50 @@ int main(void){
             perror("pipe");
             exit(EXIT_FAILURE);
         }
-        pid[i] = fork();
-        switch (pid[i]){
-            case 0: //fils
-                if(i==0){
-                    addition(pipefds + i*2);
-                }else if(i==1){
-                    // multiplication(pipefd);
-                }else{
-                    // soustraction(pipefd);
-                }
-                break;       
-            
-            default: //père
-                if (i==2){
-                    char* operation;
-                    char *a,*b;
+        if ((pid[i] = fork()) == -1){
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+        if(pid[i] == 0){ //fils
+            // printf("<< %d >>",i);
+            if(i==0){
+                addition(pipefds + i*2);
+            }else if(i==1){
+                multiplication(pipefds + i*2);
+            }else{
+                soustraction(pipefds + i*2);
+            }
+            exit(EXIT_FAILURE);
+        }
+    }
 
-                    close(pipefds[0]);
-                    close((pipefds+2)[0]);
-                    close((pipefds+4)[0]);
+    char operation[50];
+    char a [10], b[10];
 
-                    while (1){              
-                        printf("Entrez un calcul (addition / multiplication / soustraction)\nex: \"addition 2 4\" \n\n> ");
-                        scanf("%s %c %c", operation, a, b);
-                        if(strcmp(operation,"addition")==0){
-                            printf("Addition 1");
-                            write(pipefds[1],a,strlen(a)+1);
-                            write(pipefds[1],b,strlen(b)+1);
-                        }else if(strcmp(operation,"multiplication")==0){
-                            write((pipefds+2)[1],a,strlen(a)+1);
-                            write((pipefds+2)[1],b,strlen(b)+1);
-                        }else if (strcmp(operation,"soustraction")==0){
-                            write((pipefds+4)[1],a,strlen(a)+1);
-                            write((pipefds+4)[1],b,strlen(b)+1);
-                        }
-                    }
-                    break;
-                }
+    close(pipefds[0]);
+    close((pipefds+2)[0]);
+    close((pipefds+4)[0]);
+
+    printf("Entrez un calcul (addition / multiplication / soustraction)\nex: \"addition 2 4\" \n\n> ");
+    while (1){
+        scanf("%s %c %c", &operation, &a, &b);
+        // operation = "addition";
+        // a = "2";
+        // b = "4";
+        if(strcmp(operation,"addition")==0){
+            write(pipefds[1],a,strlen(a)+1);
+            write(pipefds[1],b,strlen(b)+1);
+        }else if(strcmp(operation,"multiplication")==0){
+            write((pipefds+2)[1],a,strlen(a)+1);
+            write((pipefds+2)[1],b,strlen(b)+1);
+        }else if (strcmp(operation,"soustraction")==0){
+            write((pipefds+4)[1],a,strlen(a)+1);
+            write((pipefds+4)[1],b,strlen(b)+1);
+        }else{
+            for (i=0; i<3; i++){
+                kill(pid[i], SIGKILL);
+            }
+            exit(EXIT_SUCCESS);
         }
     }
 
