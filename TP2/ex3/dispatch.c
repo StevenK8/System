@@ -18,11 +18,11 @@ void addition(int *pipe){
         //lit l'entrée standard en boucle
         read(pipe[0],a,1);
         read(pipe[0],b,1);
+        printf("%s + %s = ",a,b);
+
         int sum = a[0]+b[0];
-        sprintf(str, "%d", sum);
         //écrit sur la sortie standard
-        printf("<<%d>>\n",sum);
-        // write(STDOUT_FILENO, str, 1);
+        printf("%d\n> ",sum);
     }
 }
 
@@ -42,7 +42,7 @@ void multiplication(int *pipe){
         printf("%s * %s = ",a,b);
         int mul = a[0]*b[0];
         //écrit sur la sortie standard
-        printf("%d\n>\n",mul);
+        printf("%d\n> ",mul);
     }
 }
 
@@ -62,7 +62,7 @@ void soustraction(int *pipe){
         printf("%s - %s = ",a,b);
         int sub = a[0]-b[0];
         //écrit sur la sortie standard
-        printf("%d\n>\n",sub);
+        printf("%d\n> ",sub);
     }
 }
 
@@ -81,7 +81,6 @@ int main(void){
             perror("fork");
             exit(EXIT_FAILURE);
         }
-        // printf("<< %d - %d >>\n",i, pid[i]);
         if(pid[i] == 0){ //fils
             if(i==0){
                 addition(pipefds + i*2);
